@@ -8,10 +8,15 @@ from math import sqrt
 from random import uniform
 from statistics import mean, pstdev
 
+DEFAULT_MAX_CLUSTER_SIZE = 5
+
 
 def lambda_handler(event, context):
     print("FULL REQUEST: ", event)
-    flat_clusters = do_clustering(json.loads(event["body"]))
+    body = json.loads(event["body"])
+    points = body["points"]
+    max_size = body.get("max_size", DEFAULT_MAX_CLUSTER_SIZE)
+    flat_clusters = do_clustering(points, max_size=max_size)
     print("RESPONSE BODY: ", flat_clusters)
     return {
         "statusCode": "200",
@@ -22,9 +27,10 @@ def lambda_handler(event, context):
     }
 
 
-def do_clustering(serial_points: t.List[t.Dict]) -> t.List[t.Dict]:
+def do_clustering(
+    serial_points: t.List[t.Dict], max_size: t.Optional[int] = DEFAULT_MAX_CLUSTER_SIZE
+) -> t.List[t.Dict]:
     points = [DataPoint(**point) for point in serial_points]
-    max_size = 5
     num_points = len(points)
     if num_points % max_size == 0:
         num_clusters = int(num_points / max_size)
@@ -65,7 +71,7 @@ class DataPoint:
 
     @property
     def is_urgent(self) -> bool:
-        return (
+        return bool(
             self.extra_data
             and isinstance(self.extra_data, dict)
             and self.extra_data.get("is_urgent")
@@ -184,7 +190,7 @@ class KMeans(t.Generic[Point]):
             cluster.centroid = DataPoint(means)
 
     def order_clusters(self) -> None:
-        self._clusters.sort(key=self.__cluster_ordering)
+        self._clusters.sort(key=self.__cluster_ordering, reverse=True)
 
     def __cluster_ordering(self, cluster: Cluster) -> int:
         return sum(datapoint.is_urgent for datapoint in cluster.points)
@@ -198,7 +204,7 @@ class KMeans(t.Generic[Point]):
             self._generate_centroids()  # find new centroids
             if old_centroids == self._centroids:  # have centroids moved?
                 print(f"Converged after {iteration} iterations")
-                return self._clusters
+                break
         self.order_clusters()
         return self._clusters
 
