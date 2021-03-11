@@ -61,8 +61,8 @@ class DataPoint:
         self, coords: t.Iterable[float], _id: t.Any = None, extra_data: t.Optional[t.Dict] = None
     ) -> None:
         self._id: t.Any = _id
-        self._originals: t.Tuple[float, ...] = tuple(coords)
-        self.dimensions: t.Tuple[float, ...] = tuple(coords)
+        self._originals: t.Tuple[float, ...] = tuple(float(c) for c in coords)
+        self.dimensions: t.Tuple[float, ...] = tuple(float(c) for c in coords)
         self.extra_data: t.Optional[t.Dict] = extra_data
 
     @property
