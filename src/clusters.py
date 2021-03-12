@@ -8,7 +8,7 @@ from math import sqrt
 from random import uniform
 from statistics import mean, pstdev
 
-DEFAULT_MAX_CLUSTER_SIZE = 5
+DEFAULT_MAX_CLUSTER_SIZE = 4
 
 
 def lambda_handler(event, context):
